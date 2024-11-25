@@ -1,0 +1,5 @@
+/a000_DATASET/*
+/.idea
+/a004_main/a003_training/saved_history/models/
+**/__pycache__/
+/a004_main/a003_training/runs/*

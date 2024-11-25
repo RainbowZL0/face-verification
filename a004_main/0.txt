@@ -1,0 +1,43 @@
+dataset_for_test_or_val类返回的字典格式如下，
+{
+	"img0_path": img0_path,
+	"img1_path": img1_path,
+	"person0_key": person0_key,
+	"person1_key": person1_key if not is_positive else person0_key,
+	"mod0": mod_choice_0,
+	"mod1": mod_choice_1,
+	"same_modality": True if mod_choice_0 == mod_choice_1 else False,
+	"label": is_positive,
+}
+
+
+据此，决定本对象DatasetForTraining的返回字典样式如下，
+{
+	"img_anchor_path": "...",
+	"img_pos_path": "...",
+	"img_neg_path": "...",
+	"person_key_anchor_and_pos": "",
+	"person_key_neg": "",
+	"roll_mod_kind": 选项有 "diff-mod", "vis", "infrared"，选其一
+	"specific_triplet_mods": 形如"iii"或"ivv"等等，分别代表三元组的模态,
+	"mod_anchor": 选项有"infrared"或"vis"，选其一,
+	"mod_pos": 同上,
+	"mod_neg": 同上,
+}
+
+
+验证的每一对结果信息：
+result_dict = {
+	'img0_path': '..\\..\\a000_DATASET\\SF-TL54\\gray\\test\\images\\119_1_2_8_144_102_1.png',
+	'img1_path': '..\\..\\a000_DATASET\\SF-TL54\\gray\\test\\images\\119_1_2_1_115_32_1.png',
+	'person0_key': 'person_119',
+	'person1_key': 'person_119',
+	'mod0': 'infrared',
+	'mod1': 'infrared',
+	'same_modality': True,
+	'label': True,
+	'model_prediction_result': True or False,
+	'prediction_compared_with_label': True or False,
+	'cosine_similarity': float -1 ~ 1,
+	'cosine_distance': float 0 ~ 2,
+}
