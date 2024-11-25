@@ -1,4 +1,5 @@
 import base64
+import datetime
 import pprint
 from io import BytesIO
 from pathlib import Path
@@ -77,17 +78,36 @@ class MyFastapiProcessor:
 
     def get_image_pair_and_verify_base64_version(
             self,
-            code_0: str,
-            code_1: str,
+            image_0: str,
+            image_1: str,
     ):
         """
         解码过程为，base64 -> decode -> ByteIO() -> PIL.open() -> numpy.array()。
         UploadFile有文件名，而base64没有，不便于保存到本地。采用时间戳生成文件名。
         """
-        img_arr_list = [read_base64_as_np_hwc_bgr_uint8(code_i) for code_i in [code_0, code_1]]
+        img_arr_list = [read_base64_as_np_hwc_bgr_uint8(code_i) for code_i in [image_0, image_1]]
         face_arr_list = [crop_face_from_img_to_hwc_bgr_uint8(img_i) for img_i in img_arr_list]
         face_tensor_list = [self.transform_from_array_to_tensor(arr_i) for arr_i in face_arr_list]
         distance = self.infer_distance_given_face_tensor_list(face_tensor_list)
+
+        result_dict = {
+            "error_code": 0,
+            "error_message": "SUCCESS",
+            "timestamp": get_time_stamp_str(),
+            "result": {
+                "score": transform_distance_to_similarity_score(distance),
+                "is_the_same_person": judge_using_distance_threshold(distance),
+            }
+        }
+
+        # 输出处理完成的日志
+        LOGGER.info(
+            Fore.LIGHTGREEN_EX +
+            f"Image pair done.\n"
+            f"{pprint.pformat(result_dict)}"
+        )
+
+        return result_dict
 
     def transform_from_array_to_tensor(self, face_array):
         face_array = cv2.cvtColor(src=face_array, code=cv2.COLOR_BGR2RGB)
@@ -103,7 +123,6 @@ class MyFastapiProcessor:
         return round(distance, 5)
 
 
-
 def read_base64_as_np_hwc_bgr_uint8(code_0: str):
     byte = base64.b64decode(code_0)
     arr = numpy.array(Image.open(BytesIO(byte)))
@@ -114,6 +133,12 @@ def read_base64_as_np_hwc_bgr_uint8(code_0: str):
     else:
         color_convert_code = cv2.COLOR_RGBA2BGR
     return cv2.cvtColor(arr, color_convert_code)
+
+
+def transform_distance_to_similarity_score(distance):
+    """0 ~ 2 -> 0 ~ 100"""
+    sim = (-distance) * 50 + 100
+    return round(sim, 5)
 
 
 def read_upload_file_img_as_numpy_hwc_bgr_uint8(file_0: UploadFile) -> np.ndarray:
@@ -203,3 +228,7 @@ def build_model_and_load_my_state_for_fastapi():
     model = InceptionResnetV1(pretrained="vggface2").to(device=FASTAPI_DEVICE)
     model.load_state_dict(read_state["model_state"])
     return model
+
+
+def get_time_stamp_str():
+    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

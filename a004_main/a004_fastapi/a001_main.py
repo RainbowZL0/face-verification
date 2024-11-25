@@ -18,8 +18,8 @@ def send_data(data):
     return {"received": data}
 
 
-@app.post("/upload_image_pair_and_verify")
-def upload_image_pair_and_verify(
+@app.post("/upload_image_pair_and_verify_file_version")
+def upload_image_pair_and_verify_file_version(
         file_0: UploadFile = File(...),
         file_1: UploadFile = File(...),
 ):
@@ -30,6 +30,17 @@ def upload_image_pair_and_verify(
     3. 类型注解UploadFile在这里不只是注释，还会影响运行功能。
     """
     return my_fastapi_processor.get_image_pair_and_verify_file_version(file_0=file_0, file_1=file_1)
+
+
+@app.post('/upload_image_pair_and_verify')
+def upload_image_pair_and_verify(
+        image_0: str,
+        image_1: str,
+):
+    return my_fastapi_processor.get_image_pair_and_verify_base64_version(
+        image_0=image_0,
+        image_1=image_1,
+    )
 
 
 def start():
